@@ -3,7 +3,7 @@ services:
     name: tlg-chatbot
     env: python
     buildCommand: pip install -r requirements.txt
-    uvicorn src.utils.main:app --host 0.0.0.0 --port 10000
+    startCommand: uvicorn src.utils.main:app --host 0.0.0.0 --port 10000
     autoDeploy: true
     envVars:
       - key: OPENAI_API_KEY
