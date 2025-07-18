@@ -65,7 +65,7 @@ async def bot() -> None:
             "❌ Unauthorized. Check if your API ID, API Hash, and bot token are correct."
         )
         return
-    except Exception as e:
+    except Exception:
         logging.exception("❌ Unhandled exception during bot startup")
         return
 
@@ -73,10 +73,20 @@ async def bot() -> None:
     @client.on(events.NewMessage(pattern=r"(?i)^/start$", incoming=True))
     async def start_handler(event):
         await event.respond("Hello Randy!")
-        raise StopPropagation  # prevent security_check or other handlers
+        raise StopPropagation
 
-    # 💬 Register all other handlers
-    client.add_event_handler(security_check)
+    # 💬 Register security_check only for non-command group messages
+    from telethon import events as _events
+
+    client.add_event_handler(
+        security_check,
+        _events.NewMessage(
+            incoming=True,
+            func=lambda e: not (e.is_private or (e.raw_text or "").startswith("/")),
+        ),
+    )
+
+    # 💬 Register all other handlers normally
     client.add_event_handler(search_handler)
     client.add_event_handler(bash_handler)
     client.add_event_handler(clear_handler)
