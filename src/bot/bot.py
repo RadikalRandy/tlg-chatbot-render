@@ -62,18 +62,11 @@ async def bot() -> None:
         logging.exception("❌ Unhandled exception during bot startup")
         return
 
-    # 💬 Register custom /start handler
-    @client.on(events.NewMessage(pattern="/start"))
+    # 💬 Respond to /start with "Hello Randy!"
+    @client.on(events.NewMessage(pattern=r"(?i)^/start$", incoming=True))
     async def start_handler(event):
-        sender = await event.get_sender()
-        first_name = sender.first_name if sender and sender.first_name else "there"
-
-        await event.respond(
-            f"👋 Hey {first_name}! Welcome to RandySaiBot.\n\n"
-            "I'm your AI-powered assistant — ready to chat, search, solve problems, and make your life easier.\n"
-            "Try commands like `/search`, `/clear`, or just send me a message to get started.\n\n"
-            "✨ Let's make something amazing together!"
-        )
+        await event.respond("Hello Randy!")
+        logging.info("✅ Responded to /start command.")
 
     # 💬 Register all other handlers
     client.add_event_handler(security_check)
