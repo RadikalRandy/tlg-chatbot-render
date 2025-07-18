@@ -47,6 +47,10 @@ def load_keys() -> Tuple[int, str, str]:
 async def bot() -> None:
     api_id, api_hash, bot_token = load_keys()
 
+    if not bot_token:
+        logging.error("❌ Bot token is missing. Please check your Render environment variables.")
+        return
+
     try:
         client = TelegramClient('bot_session', api_id, api_hash)
         await client.start(bot_token=bot_token)
