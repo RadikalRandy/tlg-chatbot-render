@@ -9,7 +9,7 @@ from telethon import TelegramClient
 from telethon.errors.rpcerrorlist import UnauthorizedError
 
 from src.handlers import (
-    bard_chat_handler,whi
+    bard_chat_handler,
     bash_handler,
     bing_chat_handler,
     clear_handler,
