@@ -22,7 +22,7 @@ from src.handlers import (
     user_chat_handler,
 )
 
-# Load environment keys
+# Load keys from environment
 def load_keys() -> Tuple[int, str, str]:
     load_dotenv()
     openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -35,6 +35,7 @@ def load_keys() -> Tuple[int, str, str]:
     
     return api_id, api_hash, bot_token
 
+# Start and run the bot
 async def bot() -> None:
     api_id, api_hash, bot_token = load_keys()
 
@@ -48,7 +49,7 @@ async def bot() -> None:
         logging.error(f"❌ Unexpected error during bot startup: {e}")
         raise
 
-    # Register all event handlers
+    # Add event handlers
     client.add_event_handler(security_check)
     client.add_event_handler(search_handler)
     client.add_event_handler(bash_handler)
