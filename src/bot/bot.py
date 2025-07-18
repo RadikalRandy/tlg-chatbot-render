@@ -22,17 +22,25 @@ from src.handlers import (
     user_chat_handler,
 )
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
 # Load keys from environment
 def load_keys() -> Tuple[int, str, str]:
     load_dotenv()
+
     openai.api_key = os.getenv("OPENAI_API_KEY")
     openai.organization = os.getenv("OPENAI_ORG")
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-    
-    api_id = int(os.getenv("API_ID"))
-    api_hash = os.getenv("API_HASH")
-    bot_token = os.getenv("BOTTOKEN")
-    
+
+    try:
+        api_id = int(os.getenv("API_ID"))
+        api_hash = os.getenv("API_HASH")
+        bot_token = os.getenv("BOTTOKEN")
+    except (TypeError, ValueError):
+        logging.error("❌ Failed to load keys. Check environment variables.")
+        raise
+
     return api_id, api_hash, bot_token
 
 # Start and run the bot
@@ -43,13 +51,13 @@ async def bot() -> None:
         client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
         logging.info("✅ Bot started successfully.")
     except UnauthorizedError:
-        logging.error("❌ Unauthorized access. Check your Telethon API ID and Hash.")
-        raise
+        logging.error("❌ Unauthorized access. Check your API ID, Hash, or bot token.")
+        return
     except Exception as e:
-        logging.error(f"❌ Unexpected error during bot startup: {e}")
-        raise
+        logging.exception("❌ Unhandled exception during bot startup")
+        return
 
-    # Add event handlers
+    # Register event handlers
     client.add_event_handler(security_check)
     client.add_event_handler(search_handler)
     client.add_event_handler(bash_handler)
@@ -62,5 +70,5 @@ async def bot() -> None:
     client.add_event_handler(group_chat_handler)
     client.add_event_handler(user_chat_handler)
 
-    logging.info("🤖 Bot is now running and listening for events.")
+    logging.info("🤖 Bot is now listening for events.")
     await client.run_until_disconnected()
