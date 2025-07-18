@@ -22,10 +22,10 @@ from src.handlers import (
     user_chat_handler,
 )
 
-# Configure logging
+# 🛠 Logging configuration
 logging.basicConfig(level=logging.INFO)
 
-# Load keys from environment
+# 🔐 Load API keys and tokens
 def load_keys() -> Tuple[int, str, str]:
     load_dotenv()
 
@@ -37,27 +37,28 @@ def load_keys() -> Tuple[int, str, str]:
         api_id = int(os.getenv("API_ID"))
         api_hash = os.getenv("API_HASH")
         bot_token = os.getenv("BOTTOKEN")
-    except (TypeError, ValueError):
-        logging.error("❌ Failed to load keys. Check environment variables.")
+    except Exception:
+        logging.error("❌ Environment variable loading failed. Double-check your .env or Render settings.")
         raise
 
     return api_id, api_hash, bot_token
 
-# Start and run the bot
+# 🚀 Start and run the bot
 async def bot() -> None:
     api_id, api_hash, bot_token = load_keys()
 
     try:
-        client = await TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
-        logging.info("✅ Bot started successfully.")
+        client = TelegramClient('bot_session', api_id, api_hash)
+        await client.start(bot_token=bot_token)
+        logging.info("✅ Bot started and authenticated successfully.")
     except UnauthorizedError:
-        logging.error("❌ Unauthorized access. Check your API ID, Hash, or bot token.")
+        logging.error("❌ Unauthorized. Check if your API ID, API Hash, and bot token are correct.")
         return
     except Exception as e:
         logging.exception("❌ Unhandled exception during bot startup")
         return
 
-    # Register event handlers
+    # 💬 Register handlers
     client.add_event_handler(security_check)
     client.add_event_handler(search_handler)
     client.add_event_handler(bash_handler)
