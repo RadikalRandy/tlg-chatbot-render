@@ -26,67 +26,49 @@ from src.handlers import (
 # 🛠 Logging configuration
 logging.basicConfig(level=logging.INFO)
 
-# 🔐 Load API keys and tokens
 def load_keys() -> Tuple[int, str, str]:
     load_dotenv()
-
     openai.api_key = os.getenv("OPENAI_API_KEY")
     openai.organization = os.getenv("OPENAI_ORG")
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-    try:
-        api_id = int(os.getenv("API_ID"))
-        api_hash = os.getenv("API_HASH")
-        bot_token = os.getenv("BOTTOKEN")
-    except Exception:
-        logging.error(
-            "❌ Environment variable loading failed. Double-check your .env or Render settings."
-        )
-        raise
-
+    api_id = int(os.getenv("API_ID"))
+    api_hash = os.getenv("API_HASH")
+    bot_token = os.getenv("BOTTOKEN")
     return api_id, api_hash, bot_token
 
-# 🚀 Start and run the bot
 async def bot() -> None:
     api_id, api_hash, bot_token = load_keys()
-
     if not bot_token:
-        logging.error(
-            "❌ Bot token is missing. Please check your Render environment variables."
-        )
+        logging.error("❌ Bot token is missing.")
         return
 
+    client = TelegramClient("bot_session", api_id, api_hash)
     try:
-        client = TelegramClient("bot_session", api_id, api_hash)
         await client.start(bot_token=bot_token)
         logging.info("✅ Bot started and authenticated successfully.")
     except UnauthorizedError:
-        logging.error(
-            "❌ Unauthorized. Check if your API ID, API Hash, and bot token are correct."
-        )
+        logging.error("❌ Unauthorized. Check API_ID, API_HASH & BOTTOKEN.")
         return
     except Exception:
         logging.exception("❌ Unhandled exception during bot startup")
         return
 
-    # 💬 Respond to /start with "Hello Randy!" and stop further handlers
+    # 💬 1. Handle /start in private chats and stop propagation
     @client.on(events.NewMessage(pattern=r"(?i)^/start$", incoming=True))
     async def start_handler(event):
         await event.respond("Hello Randy!")
         raise StopPropagation
 
-    # 💬 Register security_check only for non-command group messages
-    from telethon import events as _events
-
+    # 💬 2. Run security_check only on group (negative chat_id) non-commands
     client.add_event_handler(
         security_check,
-        _events.NewMessage(
-            incoming=True,
-            func=lambda e: not (e.is_private or (e.raw_text or "").startswith("/")),
+        events.NewMessage(
+            func=lambda e: (e.chat_id or 0) < 0 and not (e.raw_text or "").startswith("/"),
         ),
     )
 
-    # 💬 Register all other handlers normally
+    # 💬 3. Register your other handlers
     client.add_event_handler(search_handler)
     client.add_event_handler(bash_handler)
     client.add_event_handler(clear_handler)
