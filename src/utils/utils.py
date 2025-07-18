@@ -95,7 +95,14 @@ RANDOM_ACTION = [
     SendMessageChooseStickerAction(),
     SendMessageChooseContactAction(),
 ]
-ALLOW_USERS = eval(os.getenv("ALLOW_USERS"))
+import json  # Make sure this import is at the top
+
+raw_users = os.getenv("ALLOW_USERS", "[]")  # default to "[]" if not set
+try:
+    ALLOW_USERS = json.loads(raw_users)
+except json.JSONDecodeError:
+    ALLOW_USERS = []
+
 
 MODEL_DICT = {
     "gpt-4k": ("gpt-3.5-turbo-1106", 4096),
