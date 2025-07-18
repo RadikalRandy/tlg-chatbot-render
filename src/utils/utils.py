@@ -114,17 +114,22 @@ max_token = MODEL_DICT["gpt-4k"][1]
 
 def initialize_logging() -> io.StringIO:
     coloredlogs.install()
-    logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
-    # Create a StringIO object to capture log messages sent to the console
+
     console_out = io.StringIO()
 
-    # Get app handler from root logger
-    console_handler = logging.getLogger("root").handlers[0]
+    # Create a new handler with our custom stream
+    custom_handler = logging.StreamHandler(console_out)
+    custom_handler.setLevel(logging.DEBUG)
 
-    # Set the stream of the console handler to the StringIO object
-    console_handler.stream = console_out
+    # Format logs to match coloredlogs style (optional)
+    formatter = coloredlogs.ColoredFormatter()
+    custom_handler.setFormatter(formatter)
+
+    # Add it to the root logger
+    logging.getLogger().addHandler(custom_handler)
 
     return console_out
+
 
 
 def create_initial_folders() -> None:
