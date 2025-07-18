@@ -5,7 +5,7 @@ from typing import Tuple
 import google.generativeai as genai
 import openai
 from dotenv import load_dotenv
-from telethon import TelegramClient
+from telethon import TelegramClient, events
 from telethon.errors.rpcerrorlist import UnauthorizedError
 
 from src.handlers import (
@@ -62,7 +62,20 @@ async def bot() -> None:
         logging.exception("❌ Unhandled exception during bot startup")
         return
 
-    # 💬 Register handlers
+    # 💬 Register custom /start handler
+    @client.on(events.NewMessage(pattern="/start"))
+    async def start_handler(event):
+        sender = await event.get_sender()
+        first_name = sender.first_name if sender and sender.first_name else "there"
+
+        await event.respond(
+            f"👋 Hey {first_name}! Welcome to RandySaiBot.\n\n"
+            "I'm your AI-powered assistant — ready to chat, search, solve problems, and make your life easier.\n"
+            "Try commands like `/search`, `/clear`, or just send me a message to get started.\n\n"
+            "✨ Let's make something amazing together!"
+        )
+
+    # 💬 Register all other handlers
     client.add_event_handler(security_check)
     client.add_event_handler(search_handler)
     client.add_event_handler(bash_handler)
