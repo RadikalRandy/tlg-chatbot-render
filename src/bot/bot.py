@@ -22,54 +22,44 @@ from src.handlers import (
     user_chat_handler,
 )
 
-
-# Load  keys
-def load_keys() -> Tuple[str, int, str]:
+# Load environment keys
+def load_keys() -> Tuple[int, str, str]:
     load_dotenv()
     openai.api_key = os.getenv("OPENAI_API_KEY")
     openai.organization = os.getenv("OPENAI_ORG")
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-    api_id = os.getenv("API_ID")
+    
+    api_id = int(os.getenv("API_ID"))
     api_hash = os.getenv("API_HASH")
     bot_token = os.getenv("BOTTOKEN")
-    return int(api_id), api_hash, bot_token
-
+    
+    return api_id, api_hash, bot_token
 
 async def bot() -> None:
     api_id, api_hash, bot_token = load_keys()
-    
+
     try:
         client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
-        logging.info("Successfully initiated bot")
+        logging.info("✅ Bot started successfully.")
     except UnauthorizedError:
-        logging.error("Unauthorized access. Please check your Telethon API ID, API hash")
-        raise UnauthorizedError
+        logging.error("❌ Unauthorized access. Check your Telethon API ID and Hash.")
+        raise
     except Exception as e:
-        logging.error(f"Error occurred: {e}")
-        raise e
+        logging.error(f"❌ Unexpected error during bot startup: {e}")
+        raise
 
+    # Register all event handlers
     client.add_event_handler(security_check)
     client.add_event_handler(search_handler)
-    logging.debug("Search handler added")
     client.add_event_handler(bash_handler)
-    logging.debug("Bash handler added")
     client.add_event_handler(clear_handler)
-    logging.debug("Clear handler added")
     client.add_event_handler(switch_model_handler)
-    logging.debug("Switch model handler added")
     client.add_event_handler(bard_chat_handler)
-    logging.debug("Bard chat handler added")
     client.add_event_handler(bing_chat_handler)
-    logging.debug("Bing chat handler added")
     client.add_event_handler(gemini_chat_handler)
-    logging.debug("Gemini chat handler added")
     client.add_event_handler(senpai_chat_handler)
-    logging.debug("Senpai chat handler added")
     client.add_event_handler(group_chat_handler)
-    logging.debug("Group chat handler added")
     client.add_event_handler(user_chat_handler)
-    logging.debug("User chat handler added")
 
-    print("Bot is running")
+    logging.info("🤖 Bot is now running and listening for events.")
     await client.run_until_disconnected()
-    
