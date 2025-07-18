@@ -48,7 +48,7 @@ async def bot() -> None:
     api_id, api_hash, bot_token = load_keys()
 
     try:
-        client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
+        client = await TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
         logging.info("✅ Bot started successfully.")
     except UnauthorizedError:
         logging.error("❌ Unauthorized access. Check your API ID, Hash, or bot token.")
