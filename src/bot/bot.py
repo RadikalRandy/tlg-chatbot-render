@@ -6,6 +6,7 @@ import google.generativeai as genai
 import openai
 from dotenv import load_dotenv
 from telethon import TelegramClient, events
+from telethon.events import StopPropagation
 from telethon.errors.rpcerrorlist import UnauthorizedError
 
 from src.handlers import (
@@ -38,7 +39,9 @@ def load_keys() -> Tuple[int, str, str]:
         api_hash = os.getenv("API_HASH")
         bot_token = os.getenv("BOTTOKEN")
     except Exception:
-        logging.error("❌ Environment variable loading failed. Double-check your .env or Render settings.")
+        logging.error(
+            "❌ Environment variable loading failed. Double-check your .env or Render settings."
+        )
         raise
 
     return api_id, api_hash, bot_token
@@ -48,25 +51,29 @@ async def bot() -> None:
     api_id, api_hash, bot_token = load_keys()
 
     if not bot_token:
-        logging.error("❌ Bot token is missing. Please check your Render environment variables.")
+        logging.error(
+            "❌ Bot token is missing. Please check your Render environment variables."
+        )
         return
 
     try:
-        client = TelegramClient('bot_session', api_id, api_hash)
+        client = TelegramClient("bot_session", api_id, api_hash)
         await client.start(bot_token=bot_token)
         logging.info("✅ Bot started and authenticated successfully.")
     except UnauthorizedError:
-        logging.error("❌ Unauthorized. Check if your API ID, API Hash, and bot token are correct.")
+        logging.error(
+            "❌ Unauthorized. Check if your API ID, API Hash, and bot token are correct."
+        )
         return
     except Exception as e:
         logging.exception("❌ Unhandled exception during bot startup")
         return
 
-    # 💬 Respond to /start with "Hello Randy!"
+    # 💬 Respond to /start with "Hello Randy!" and stop further handlers
     @client.on(events.NewMessage(pattern=r"(?i)^/start$", incoming=True))
     async def start_handler(event):
         await event.respond("Hello Randy!")
-        logging.info("✅ Responded to /start command.")
+        raise StopPropagation  # prevent security_check or other handlers
 
     # 💬 Register all other handlers
     client.add_event_handler(security_check)
