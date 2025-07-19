@@ -21,7 +21,6 @@ from src.handlers.bing_chat_handler import bing_chat_handler
 from src.handlers.gemini_chat_handler import gemini_chat_handler
 from src.handlers.senpai_chat_handler import senpai_chat_handler
 from src.handlers.group_chat_handler import group_chat_handler
-# Removed user_chat_handler to avoid overlap
 
 logging.basicConfig(level=logging.INFO)
 
@@ -53,15 +52,15 @@ async def bot() -> None:
         logging.exception("❌ Client startup error.")
         return
 
-    # 1️⃣ /start in private chats only
+    # /start command
     @client.on(events.NewMessage(incoming=True, pattern=r"(?i)^/start$"))
     async def start_handler(event):
         if not event.is_private:
             return
-        await event.respond("Hello Randy!")
+        await event.respond("Hello Randy! Your bot is up and running. 🤖")
         raise StopPropagation
 
-    # 2️⃣ security_check for group non-commands
+    # Group security check for non-commands
     client.add_event_handler(
         security_check,
         events.NewMessage(
@@ -70,14 +69,13 @@ async def bot() -> None:
         ),
     )
 
-    # 3️⃣ gpt_handler for private non-commands only
+    # GPT handler for private non-command messages
     @client.on(events.NewMessage(incoming=True, func=lambda e: e.is_private and not (e.raw_text or "").startswith("/")))
     async def _gpt(event):
         await gpt_handler(event)
-        # Prevent any other handler from firing on this message
         raise StopPropagation
 
-    # 4️⃣ Other slash-command handlers (they handle their own patterns)
+    # Slash-command handlers
     client.add_event_handler(search_handler)
     client.add_event_handler(bash_handler)
     client.add_event_handler(clear_handler)
