@@ -1,9 +1,19 @@
-# src/handlers/search_handler.py
+from telethon import events
 
-def search_handler(query: str) -> str:
-    # Simulate search processing
+@events.register(events.NewMessage(pattern=r"(?i)^/search (.+)"))
+async def search_handler(event):
+    query = event.pattern_match.group(1).strip()
+
     if not query:
-        return "Hmm... You didn't type a search query."
-    
-    # Placeholder: this is where real logic would go
-    return f"🔍 You searched for: '{query}'. I found some cool results (pretend this is a real search)."
+        await event.respond("❌ You didn't provide a search query. Try using `/search your topic`.")
+        return
+
+    # Simulated search logic
+    # You can later integrate real APIs like Bing or Google here
+    response_text = (
+        f"🔍 You searched for: `{query}`\n"
+        "📚 Here's a pretend result just to get things rolling:\n"
+        "👉 https://example.com/fake-search-result"
+    )
+
+    await event.respond(response_text)
