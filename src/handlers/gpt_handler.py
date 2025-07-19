@@ -2,26 +2,33 @@ import logging
 import openai
 from telethon import events
 
+# Simple in-memory session per user
+user_sessions = {}
+
 async def gpt_handler(event: events.NewMessage.Event):
-    # 1) Ignore commands
+    user_id = event.sender_id
     text = event.raw_text or ""
     if text.startswith("/"):
         return
 
-    # 2) Show typing… (optional)
+    # Show typing action
     await event.client.send_chat_action(event.chat_id, "typing")
 
-    # 3) Call OpenAI
+    # Get or initialize message history
+    history = user_sessions.get(user_id, [])
+    history.append({"role": "user", "content": text})
+
     try:
-        resp = openai.ChatCompletion.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": text}],
+            messages=history,
             temperature=0.7,
         )
-        answer = resp.choices[0].message.content.strip()
+        answer = response.choices[0].message.content.strip()
+        history.append({"role": "assistant", "content": answer})
+        user_sessions[user_id] = history  # Save session
     except Exception as e:
         logging.exception("❌ GPT API error")
         answer = "Sorry, I had trouble thinking. 🤖💤"
 
-    # 4) Send GPT’s reply
     await event.respond(answer)
